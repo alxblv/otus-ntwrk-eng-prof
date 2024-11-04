@@ -389,6 +389,12 @@ Why 8? Aren't frames in native VLAN left untagged? If so, why do we need to add 
 
 ![part3-step1](./images/part3-step1.png)
 
+UPD: tested with addition of access port in native vlan and attempts of reaching from this new node to R1 (had to add ip address to e0/0.8). Only after native VLAN is added to allowed VLANs in all trunks, frames would reach the destination.
+
+As shown in ```show int trunk``` output, native vlan is among the allowed, in the Wireshark capture it can be seen that frames from the new node have shorter length (due to absense of 802.1q tag)
+
+![test-native-vlan-allowed](./images/test-native-vlan-allowed.png)
+
 ### Step 2. Manually configure S1’s trunk interface to router (e0/0)
 
 ```
@@ -410,6 +416,8 @@ S1(config-if)#switchport trunk native vlan 8
 Actually, it can be seen (see screenshot below):
 
 ![part3-step2](./images/part3-step2.png)
+
+UPD: it should not appear, as R1 interface is suppossed to be administratively down at this point.
 
 Only access ports are left in ```show vlan``` table (the one to PC and another was manually shut down and placed in unused VLAN).
 
