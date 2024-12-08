@@ -374,7 +374,7 @@
 | R16        | Санкт-Петербург | e0/0 (к SW10)           |                   |
 |            |                 | e0/0.80 (VLAN 80)       | 10.16.108.254/24  |
 |            |                 | e0/0.110 (VLAN 110)     | 10.16.101.254/24  |
-|            |                 | e0/1 (к R18)            | 10.18.16.2/30     | 
+|            |                 | e0/1 (к R18)            | 10.18.16.2/30     |
 |            |                 | e0/2 (к SW9)            |                   |
 |            |                 | e0/2.80 (VLAN 80)       | 10.16.98.254/24   |
 |            |                 | e0/2.110 (VLAN 110)     | 10.16.91.254/24   |
@@ -401,7 +401,7 @@
 |            |                 | Loopback0               | 192.168.77.20/32  |
 | R21        | Ламас           | e0/0 (к R15)            | 131.72.76.1/24    |
 |            |                 | e0/1 (к R22 Киторн)     | 161.18.208.21/24  |
-|            |                 | e0/2 (к R24 Триада)     | 89.178.21.24/24   | 
+|            |                 | e0/2 (к R24 Триада)     | 89.178.21.24/24   |
 | R22        | Киторн          | e0/0 (к R14)            | 38.156.254.1/24   |
 |            |                 | e0/1 (к R21 Ламас)      | 161.18.208.22/24  |
 |            |                 | e0/2 (к R23 Триада)     | 89.178.22.23/24   |
@@ -458,13 +458,73 @@
 
 ## Шаг 3: Настройка VLAN и SVI-интерфейсов коммутаторов
 
+В качестве native vlan-а выберем 99. В качестве vlan-а для неиспользуемых портов выберем 1000. Неиспользуемые порты заблокируем явно.
+
+![step3a](./images/step3a.png)
 
 ## Шаг 4: Настройка агрегации каналов (LACP) между коммутаторами
 
+С обеих сторон настраиваем LACP в активном режиме.
+
+```
+SW4(config-if-range)#channel-group 1 mode ?
+  active     Enable LACP unconditionally
+  auto       Enable PAgP only if a PAgP device is detected
+  desirable  Enable PAgP unconditionally
+  on         Enable Etherchannel only
+  passive    Enable LACP only if a LACP device is detected
+
+SW4(config-if-range)#channel-group 1 mode act
+SW4(config-if-range)#channel-group 1 mode active 
+Creating a port-channel interface Port-channel 1
+
+SW4(config-if-range)#exit
+SW4(config)#int po1
+SW4(config-if)#no shut
+```
+
+Выглядит так, будто нужно настраивать транк не только на агрегированном порту, но и на входящих в него физических портах (в `show vlan` входящие в транк физические порты отображались как принадлежащие дефолтному `vlan 1`).
+
+Также непонятно различие в последней записи `Vlans in spanning tree forwarding state and not pruned` для агрегированного `Po1` (на `SW5` - `none`, в отличие от `SW4` со списком vlan-ов):
+
+![step4a](./images/step4a.png)
+
+Перезагрузка агрегированного порта на обоих коммутаторах ситуацию не изменила.
+
 ## Шаг 5: Настройка корневых коммутаторов для STP
+
+Переключим протокол Spanning Tree на всех коммутаторах в режим RPVTS:
+
+```
+SW5(config)#spanning-tree mode rapid-pvst 
+```
 
 Чтобы избежать блокировки линков, назначим для каждого VLAN-а свой корневой коммутатор.
 
+Пусть для vlan-ов 10 и 99 корневым будет `SW4`, а для vlan-ов 70 и 77 корневым будет `SW5`.
+
+```
+SW4(config)#spanning-tree vlan 10 root primary 
+SW4(config)#spanning-tree vlan 99 root primary     
+SW4(config)#spanning-tree vlan 70 root secondary 
+SW4(config)#spanning-tree vlan 77 root secondary 
+```
+
+На соседнем коммутаторе того же уровня, наоборот:
+
+```
+SW5(config)#spanning-tree vlan 70 root primary 
+SW5(config)#spanning-tree vlan 77 root primary 
+SW5(config)#spanning-tree vlan 10 root secondary 
+SW5(config)#spanning-tree vlan 99 root secondary 
+```
+
+Ниже результат применения настроек на `SW4` и `SW5` для vlan 10 - видно, что `SW4` стал для него корневым коммутатором, а на `SW5` смотрящий на `SW4` агрегированный порт `Po1` стал корневым портом.
+
 ## Шаг 6: Настройка VRRP на парах R12-R13 и R16-R17
 
+TODO...
+
 ## Шаг 7: Настройка IP адресов и адресов шлюза по умолчанию на VPC
+
+TODO...
