@@ -1,0 +1,2 @@
+ip link add dummy0 type dummy
+ip addr add 192.168.3.254/32 dev dummy0

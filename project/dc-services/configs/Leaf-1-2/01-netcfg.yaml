@@ -1,0 +1,23 @@
+# This file describes the network interfaces available on your system
+# For more information, see netplan(5).
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    eth1:
+      addresses: [10.11.112.2/30]
+    eth2:
+      addresses: [10.12.112.2/30]
+    eth3:
+      addresses: [10.13.112.2/30]
+    eth4:
+      addresses: [10.112.211.1/30]
+    eth5:
+      addresses: [10.112.212.1/30]
+    eth0:
+      addresses: [10.0.101.2/30]
+  bridges:
+    dummy0:
+      addresses: [192.168.3.112/32]
+    dummy1:
+      addresses: []

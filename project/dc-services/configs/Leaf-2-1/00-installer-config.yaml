@@ -1,0 +1,20 @@
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens4:
+      addresses: [10.11.121.2/30]
+      gateway4: 10.11.121.1
+    ens5:
+      addresses: [10.12.121.2/30]
+      gateway4: 10.12.121.1
+    ens6:
+      addresses: [10.13.121.2/30]
+      gateway4: 10.13.121.1
+    ens7:
+      addresses: [10.121.221.1/30]
+    ens8:
+      addresses: [10.121.222.1/30]
+  bridges:
+    dummy0:
+      addresses: [192.168.3.121/32]
+  version: 2
